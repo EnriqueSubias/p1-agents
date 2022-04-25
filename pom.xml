@@ -98,7 +98,7 @@
         <distributionManagement>
           <repository>
             <id>central</id>
-            <url>https://github.com/enriquesubias/p1-agents</url>
+            <url>https://github.com/EnriqueSubias/p1-agents</url>
           </repository>
         </distributionManagement>
 </project>
