@@ -32,17 +32,18 @@ public static void runStepsSequence( int wDim,
                                IOException,  ContradictionException, TimeoutException {
   // Make instances of TreasureFinder agent and environment object classes
    EnvelopeFinder EAgent  ;
-   EnvelopeWorldEnv EnvAgent  ;  
+   EnvelopeWorldEnv EnvAgent  ;
+   EAgent = new EnvelopeFinder(wDim);
+   EnvAgent = new EnvelopeWorldEnv(wDim, fileEnvelopes);
 
-  
-
-   // save environment object into EAgent 
- 
+   // save environment object into EAgent
+    EAgent.setEnvironment( EnvAgent );
 
    // load list of steps into the Finder Agent
-    
-    
+    EAgent.loadListOfSteps( numSteps, fileSteps );
+
    // Execute sequence of steps with the Agent
+    for ( int i = 0; i < numSteps; i++ ) EAgent.runNextStep();
 
 }
 
@@ -57,8 +58,29 @@ public static void main ( String[] args) throws ParseFormatException,
         IOException,  ContradictionException, TimeoutException {
 
   // Here I run a concrete example, but you should read parameters from
-  // the command line, as decribed above.
-  runStepsSequence(  4, 5, "tests/steps1.txt", "tests/envelopes1.txt"  );
+  // the command line, as described above.
+  // runStepsSequence(  4, 5, "tests/steps1.txt", "tests/envelopes1.txt"  );
+
+    if ( args.length != 4 ) {
+      System.out.println("Usage: java EnvelopeWorld <dimension> <numSteps> <fileSteps> <fileEnvelopes>");
+      throw new ParseFormatException("Wrong number of arguments, check Usage");
+    }
+
+    // load 4 arguments from the command line
+    // NOTE: I don't know what the arguments 1 and 2 are for, so I used only 4 arguments
+    int wDim = Integer.parseInt(args[0]);
+    int numSteps = Integer.parseInt(args[1]);
+    String fileSteps = args[2];
+    String fileEnvelopes = args[3];
+
+    System.out.println("wDim = " + wDim);
+    System.out.println("numSteps = " + numSteps);
+    System.out.println("fileSteps = " + fileSteps);
+    System.out.println("fileEnvelopes = " + fileEnvelopes);
+
+    // run the sequence of steps
+    runStepsSequence( wDim, numSteps, fileSteps, fileEnvelopes );
+
 }
 
 }

@@ -37,8 +37,10 @@ public class EFState {
 
        for (int i = 0; i < wDim; i++) {
            for (int j = 0; j < wDim; j++) {
-               if (! matrix[i][j].equals( efstate2.matrix[i][j]) )
-                 status = false;
+               if (!matrix[i][j].equals(efstate2.matrix[i][j])) {
+                   status = false;
+                   break; // break out of the inner loop, there is no need to check the rest of the elements
+               }
            }
        }
 
