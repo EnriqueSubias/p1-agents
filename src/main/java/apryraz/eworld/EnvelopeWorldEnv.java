@@ -12,7 +12,9 @@ import java.util.logging.Logger;
 
 import static java.lang.System.exit;
 
-
+/**
+ * Environment used to store and interact with the Envelope World.
+ */
 public class EnvelopeWorldEnv {
     /**
      * world dimension
@@ -38,21 +40,20 @@ public class EnvelopeWorldEnv {
 
     /**
      * Load the list of pirates locations
+     * <p>
+     * The file should contain a set of envelope locations in a single line
+     * With the following format: x1,y1 x2,y2 x3,y3 ... xn,yn
+     * where xi,yi are the coordinates of a location with an envelope
+     * For example: 3,2 4,4 2,6
+     * means that there are 3 locations with envelopes, and they are
+     * at positions (3,2), (4,4) and (2,6)
      *
-     * @param: name of the file that should contain a
-     * set of envelope locations in a single line.
+     * @param envelopeFile name of the file that should contain a
+     *                     set of envelope locations in a single line.
      **/
     public void loadEnvelopeLocations(String envelopeFile) {
 
         System.out.println("Loading envelope locations from file: " + envelopeFile);
-        // The file should contain a set of envelope locations in a single line
-        // With the followin format: x1,y1 x2,y2 x3,y3 ... xn,yn
-        //  where xi,yi are the coordinates of a location with an envelope
-        // For example: 3,2 4,4 2,6
-        //  means that there are 3 locations with envelopes, and they are
-        //  at positions (3,2), (4,4) and (2,6)
-
-        // read the file using the BufferedReader class
 
         String[] envelopeLocationsList;
         String envelopes = "";
@@ -86,7 +87,7 @@ public class EnvelopeWorldEnv {
      * @return a msg with the answer to return to the agent
      **/
     public AMessage acceptMessage(AMessage msg) {
-        AMessage ans = new AMessage("voidmsg", "", "", "");
+        AMessage ans;
 
         msg.showMessage();
         if (msg.getComp(0).equals("moveto")) {
@@ -100,7 +101,7 @@ public class EnvelopeWorldEnv {
             } else
                 ans = new AMessage("notmovedto", msg.getComp(1), msg.getComp(2), "");
 
-        } else { // ( msg.getComp(0).equals("detectsat")
+        } else if (msg.getComp(0).equals("detectsat")) {
 
             // YOU MUST ANSWER HERE TO THE OTHER MESSAGE TYPE:
             //   ( "detectsat", "x" , "y", "" )
@@ -127,26 +128,27 @@ public class EnvelopeWorldEnv {
                 ans = new AMessage("notdetectedat", msg.getComp(1), msg.getComp(2), reading);
             }
 
+        } else {
+            ans = new AMessage("voidmsg", "", "", "");
         }
         return ans;
 
     }
 
+    // edge positions (x+1,y),(x−1,y),(x,y−1),(x,y+1)
+    // corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
+    // center position (x,y)
+
     /**
-     * Check if there is an envelope in
+     * Check if there is an envelope in the edges of
      * the 3x3 neighborhood of the position (nx,ny)
-     * <p>
-     * Each of the 3 functions envelopeAtEdge, envelopeAtCorner, envelopeAtCenter
-     * check is the envelope is in a particular edge, corner or center of the 3x3 neighborhood
-     * drawing provided in the assignment document
+     * check drawing provided in the assignment document
      * <p>
      * edge positions (x+1,y),(x−1,y),(x,y−1),(x,y+1)
-     * corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
-     * center position (x,y)
      *
      * @param nx x coordinate of agent position
      * @param ny y coordinate of agent position
-     * @return true if (nx,ny) has an envelope in the 3x3 neighborhood
+     * @return true if (nx,ny) has an envelope in some edge of the 3x3 neighborhood
      **/
     public boolean envelopeAtEdge(int nx, int ny) {
         for (Position pos : listOfEnvelopes) {
@@ -158,6 +160,17 @@ public class EnvelopeWorldEnv {
         return false;
     }
 
+    /**
+     * Check if there is an envelope in the corners of
+     * the 3x3 neighborhood of the position (nx,ny)
+     * check drawing provided in the assignment document
+     * <p>
+     * corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
+     *
+     * @param nx x coordinate of agent position
+     * @param ny y coordinate of agent position
+     * @return true if (nx,ny) has an envelope in some corner of the 3x3 neighborhood
+     */
     public boolean envelopeAtCorner(int nx, int ny) {
         for (Position pos : listOfEnvelopes) {
             if (pos.x == nx - 1 && pos.y == ny - 1) return true;
@@ -168,6 +181,17 @@ public class EnvelopeWorldEnv {
         return false;
     }
 
+    /**
+     * Check if there is an envelope in the center of
+     * the 3x3 neighborhood of the position (nx,ny)
+     * check drawing provided in the assignment document
+     * <p>
+     * center position (x,y)
+     *
+     * @param nx x coordinate of agent position
+     * @param ny y coordinate of agent position
+     * @return true if (nx,ny) has an envelope in the center of the 3x3 neighborhood
+     */
     public boolean envelopeAtCenter(int nx, int ny) {
         for (Position pos : listOfEnvelopes) {
             if (pos.x == nx && pos.y == ny) return true;

@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import static java.lang.System.exit;
 
@@ -73,7 +72,6 @@ public class EnvelopeFinder {
      **/
     int EnvelopePastOffset;
     int EnvelopeFutureOffset;
-    int DetectorOffset;
     int actualLiteral;
 
 
@@ -91,8 +89,6 @@ public class EnvelopeFinder {
 
         try {
             solver = buildGamma();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(EnvelopeFinder.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException | ContradictionException ex) {
             Logger.getLogger(EnvelopeFinder.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -144,7 +140,7 @@ public class EnvelopeFinder {
             exit(2);
         }
         stepsList = steps.split(" ");
-        listOfSteps = new ArrayList<Position>(numSteps);
+        listOfSteps = new ArrayList<>(numSteps);
         for (int i = 0; i < numSteps; i++) {
             String[] coords = stepsList[i].split(",");
             listOfSteps.add(new Position(Integer.parseInt(coords[0]), Integer.parseInt(coords[1])));
@@ -168,9 +164,10 @@ public class EnvelopeFinder {
      * original Envelope World, this would be to use the Smell Sensor to get
      * a binary answer, and then to update the current state according to the
      * result of the logical inferences performed by the agent with its formula.
+     *
+     * @throws ContradictionException propositional logic exception
      **/
-    public void runNextStep() throws
-            IOException, ContradictionException, TimeoutException {
+    public void runNextStep() throws ContradictionException {
 
         // Add the conclusions obtained in the previous step
         // but as clauses that use the "past" variables
@@ -183,10 +180,9 @@ public class EnvelopeFinder {
         // Next, use Detector sensor to discover new information
         processDetectorSensorAnswer(DetectsAt());
 
-
         // Perform logical consequence questions for all the positions
         // of the Envelope World
-        // performInferenceQuestions(); // TODO - uncomment this line
+        // performInferenceQuestions(); // NOTE: I have not used the inference questions
         efstate.printState();      // Print the resulting knowledge matrix
     }
 
@@ -227,7 +223,8 @@ public class EnvelopeFinder {
         // Tell the EnvironmentAgentID that we want  to move
         AMessage msg, ans;
 
-        msg = new AMessage("moveto", (new Integer(x)).toString(), (new Integer(y)).toString(), "");
+        //msg = new AMessage("moveto", (new Integer(x)).toString(), (new Integer(y)).toString(), ""); // NOTE: new Integer is deprecated
+        msg = new AMessage("moveto", Integer.toString(x), Integer.toString(y), "");
         ans = EnvAgent.acceptMessage(msg);
         System.out.println("FINDER => moving to : (" + x + "," + y + ")");
 
@@ -258,8 +255,8 @@ public class EnvelopeFinder {
     public AMessage DetectsAt() {
         AMessage msg, ans;
 
-        msg = new AMessage("detectsat", (new Integer(agentX)).toString(),
-                (new Integer(agentY)).toString(), "");
+        //msg = new AMessage("detectsat", (new Integer(agentX)).toString(), (new Integer(agentY)).toString(), "");
+        msg = new AMessage("detectsat", Integer.toString(agentX), Integer.toString(agentY), "");
         ans = EnvAgent.acceptMessage(msg);
         System.out.println("FINDER => detecting at : (" + agentX + "," + agentY + ")");
         return ans;
@@ -276,8 +273,7 @@ public class EnvelopeFinder {
      *            DetectorValue must be a number that encodes all the valid readings
      *            of the sensor given the envelopes in the 3x3 square around (x,y)
      **/
-    public void processDetectorSensorAnswer(AMessage ans) throws
-            IOException, ContradictionException, TimeoutException {
+    public void processDetectorSensorAnswer(AMessage ans) {
 
         int x = Integer.parseInt(ans.getComp(1));
         int y = Integer.parseInt(ans.getComp(2));
@@ -303,13 +299,19 @@ public class EnvelopeFinder {
         }
     }
 
-    /*
+    /**
      * This function adds the evidence clauses to Gamma
      * depending on the following valid readings of the sensor:
      * 0: no reading
      * 1: reading of an envelope in the edge positions (x+1,y),(x−1,y),(x,y−1),(x,y+1)
      * 2: reading of an envelope in the corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
      * 3: reading of an envelope in the center position (x,y)
+     *
+     * @param x     x coordinate of the position where the sensor is placed
+     * @param y     y coordinate of the position where the sensor is placed
+     * @param value value of the sensor
+     * @throws ContradictionException if the new evidence is inconsistent with the
+     *                                current state of the world
      */
     public void addEvidence(int x, int y, int value) throws ContradictionException {
         VecInt evidence = new VecInt();
@@ -338,13 +340,24 @@ public class EnvelopeFinder {
         solver.addClause(evidence);
     }
 
-    public void addEvidence2(int x, int y, int value) throws ContradictionException {
+    /**
+     * This function writes the X in the world when the agent is at (x,y)
+     * depending on the following valid readings of the sensor:
+     * <p>
+     * It places X in all the positions in the 3x3 square around (x,y)
+     * where it is certain that there is not an envelope at.
+     *
+     * @param x     x coordinate of the position where the sensor is placed
+     * @param y     y coordinate of the position where the sensor is placed
+     * @param value value of the sensor
+     *              0: no reading
+     *              1: reading of an envelope in the edge positions (x+1,y),(x−1,y),(x,y−1),(x,y+1)
+     *              2: reading of an envelope in the corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
+     *              3: reading of an envelope in the center position (x,y)
+     */
+    public void addEvidence2(int x, int y, int value) {
         if (value == 1) {
             System.out.println("value == 1");
-            //efstate.set(x + 1, y, "X");
-            //efstate.set(x - 1, y, "X");
-            //efstate.set(x, y - 1, "X");
-            //efstate.set(x, y + 1, "X");
 
             // value == 2
             efstate.set(x - 1, y - 1, "X");
@@ -365,11 +378,6 @@ public class EnvelopeFinder {
 
             // value == 3
             efstate.set(x, y, "X");
-
-            //efstate.set(x - 1, y - 1, "X");
-            //efstate.set(x + 1, y - 1, "X");
-            //efstate.set(x - 1, y + 1, "X");
-            //efstate.set(x + 1, y + 1, "X");
 
         } else if (value == 3) {
             System.out.println("value == 3");
@@ -404,33 +412,23 @@ public class EnvelopeFinder {
             // value == 3
             efstate.set(x, y, "X");
         }
-        /* else if (value == 0) {
-            // Everything but the 3x3 square around (x,y)
-            for (int i = 0; i < WorldDim; i++) {
-                for (int j = 0; j < WorldDim; j++) {
-                    if (i != x && j != y && i != x - 1 && i != x + 1 && j != y - 1 && j != y + 1) {
-                        evidence.insertFirst(coordToLineal(i, j, 0));
-                    }
-                }
-            }
-        }*/
-
     }
 
     /**
      * This function should add all the clauses stored in the list
      * futureToPast to the formula stored in solver.
      * Use the function addClause( VecInt ) to add each clause to the solver
+     *
+     * @throws ContradictionException if the solver cannot add the clauses
      **/
-    public void addLastFutureClausesToPastClauses() throws IOException,
-            ContradictionException, TimeoutException {
+    public void addLastFutureClausesToPastClauses() throws ContradictionException {
         if (futureToPast != null) {
             for (VecInt vecInt : futureToPast) { // for each clause in the list
                 solver.addClause(vecInt); // Add each clause to the solver
             }
         } else {
             System.out.println(" #debug# FINDER => futureToPast is null, initializing it only the first time");
-            futureToPast = new ArrayList<VecInt>(); // Initialize futureToPast
+            futureToPast = new ArrayList<>(); // Initialize futureToPast
             addLastFutureClausesToPastClauses(); // Call this function again to add the clauses to the solver
         }
     }
@@ -446,30 +444,31 @@ public class EnvelopeFinder {
      * An efficient version of this function should try to not add to the futureToPast
      * conclusions that were already added in previous steps, although this will not produce
      * any bad functioning in the reasoning process with the formula.
+     *
+     * @throws TimeoutException if the SAT solver times out
      **/
-    public void performInferenceQuestions() throws IOException,
-            ContradictionException, TimeoutException {
+    public void performInferenceQuestions() throws TimeoutException {
         // EXAMPLE code to check this for position (2,3):
-        /*
-       // Get variable number for position 2,3 in past variables'
-        int linealIndex = coordToLineal(2, 3, EnvelopeFutureOffset);
-       // Get the same variable, but in the past subset
-        int linealIndexPast = coordToLineal(2, 3, EnvelopePastOffset);
 
-        VecInt variablePositive = new VecInt();
-        variablePositive.insertFirst(linealIndex);
+        // Get variable number for position 2,3 in past variables'
+        //      int linealIndex = coordToLineal(2, 3, EnvelopeFutureOffset);
+        // Get the same variable, but in the past subset
+        //      int linealIndexPast = coordToLineal(2, 3, EnvelopePastOffset);
+
+        // VecInt variablePositive = new VecInt();
+        //      variablePositive.insertFirst(linealIndex);
 
         // Check if Gamma + variablePositive is unsatisfiable:
         // This is only AN EXAMPLE for a specific position: (2,3)
-        if (!(solver.isSatisfiable(variablePositive))) {
-              // Add conclusion to list, but rewritten with respect to "past" variables
-              VecInt concPast = new VecInt();
-              concPast.insertFirst(-(linealIndexPast));
+        //      if (!(solver.isSatisfiable(variablePositive))) {
+        // Add conclusion to list, but rewritten with respect to "past" variables
+        //          VecInt concPast = new VecInt();
+        //          concPast.insertFirst(-(linealIndexPast));
 
-              futureToPast.add(concPast);
-              efstate.set( 2 , 3 , "X" );
-        }
-        */
+        //          futureToPast.add(concPast);
+        //          efstate.set( 2 , 3 , "X" );
+        //    }
+
         EnvelopePastOffset = WorldLinealDim * 6;
         EnvelopeFutureOffset = WorldLinealDim * 7;
         // for every position in the Envelope World with dimensions WorldDim x WorldDim
@@ -487,8 +486,7 @@ public class EnvelopeFinder {
                 variablePositive.insertFirst(linealIndex);
 
                 // Check if Gamma + variablePositive is unsatisfiable:
-                if (!(solver.isSatisfiable(variablePositive))) { // TODO NOTE: I haven't been able to pass this condition
-                    //if (!(isSatisifiable2(variablePositive))) {
+                if (!(solver.isSatisfiable(variablePositive))) {
                     // Add conclusion to list, but rewritten with respect to "past" variables
                     VecInt concPast = new VecInt();
                     concPast.insertFirst(-(linealIndexPast));
@@ -503,32 +501,16 @@ public class EnvelopeFinder {
 
     }
 
-    public boolean isSatisifiable2(VecInt variablePositive) {
-
-        // Print variablePositive
-        if (variablePositive.size() > 0) {
-            System.out.println(" #debug# FINDER => isSatisifiable2: " + variablePositive.toString());
-        }
-
-        return true;
-
-
-    }
-
-    public void printVecInt(VecInt vec) {
-        for (int i = 0; i < vec.size(); i++) {
-            System.out.println(" #debug# FINDER => " + vec.get(i));
-        }
-    }
 
     /**
      * This function builds the initial logical formula of the agent and stores it
      * into the solver object.
      *
      * @return returns the solver object where the formula has been stored
+     * @throws IOException            input/output exception
+     * @throws ContradictionException if the solver cannot add the clauses
      **/
-    public ISolver buildGamma() throws UnsupportedEncodingException,
-            FileNotFoundException, IOException, ContradictionException {
+    public ISolver buildGamma() throws IOException, ContradictionException {
 
         // You must set this variable to the total number of boolean variables
         // in your formula Gamma
@@ -564,8 +546,12 @@ public class EnvelopeFinder {
         return solver;
     }
 
-    public void goodClauses() throws UnsupportedEncodingException, FileNotFoundException,
-            IOException, ContradictionException {
+    /**
+     * This function builds adds the clauses of the formula Gamma to the solver
+     *
+     * @throws ContradictionException if the solver cannot add the clauses
+     */
+    public void goodClauses() throws ContradictionException {
         EnvelopePastOffset = WorldLinealDim * 6;
         EnvelopeFutureOffset = WorldLinealDim * 7;
         for (int i = 0; i < WorldDim; i++) {
@@ -580,8 +566,12 @@ public class EnvelopeFinder {
         }
     }
 
-    public void otherClauses() throws UnsupportedEncodingException, FileNotFoundException,
-            IOException, ContradictionException {
+    /**
+     * This function builds adds the clauses of the formula Gamma to the solver
+     *
+     * @throws ContradictionException if the solver cannot add the clauses
+     */
+    public void otherClauses() throws ContradictionException {
         VecInt pastClause = new VecInt();
         VecInt futureClause = new VecInt();
         EnvelopePastOffset = WorldLinealDim * 6;
@@ -598,15 +588,17 @@ public class EnvelopeFinder {
         solver.addClause(futureClause);
     }
 
-    /*
+    /**
      * This function adds the clauses from when the reading of the sensor is 1,2 or 3 respectively
-     * 0: no reading
-     * 1: reading of an envelope in the edge positions (x+1,y),(x−1,y),(x,y−1),(x,y+1)
-     * 2: reading of an envelope in the corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
-     * 3: reading of an envelope in the center position (x,y)
+     *
+     * @param linealIndexSensor the reading of the sensor
+     *                          0: no reading
+     *                          1: reading of an envelope in the edge positions (x+1,y),(x−1,y),(x,y−1),(x,y+1)
+     *                          2: reading of an envelope in the corner positions (x−1,y−1),(x+1,y−1),(x−1,y+1),(x+1,y+1)
+     *                          3: reading of an envelope in the center position (x,y)
+     * @throws ContradictionException if the solver cannot add the clauses
      */
-    public void sensorReading(int linealIndexSensor) throws UnsupportedEncodingException, FileNotFoundException,
-            IOException, ContradictionException {
+    public void sensorReading(int linealIndexSensor) throws ContradictionException {
         int FutureOffset = WorldLinealDim * 7;
         for (int x = 1; x <= WorldDim; x++) {
             for (int y = 1; y <= WorldDim; y++) {
@@ -628,7 +620,16 @@ public class EnvelopeFinder {
         }
     }
 
-    public VecInt createClause(int reading, int xpos, int ypos, int FutureOffset) throws UnsupportedEncodingException, FileNotFoundException {
+    /**
+     * This function creates a clause for the sensor reading
+     *
+     * @param reading      the reading of the sensor
+     * @param xpos         the x position of the sensor
+     * @param ypos         the y position of the sensor
+     * @param FutureOffset the offset of the future world
+     * @return the clause
+     */
+    public VecInt createClause(int reading, int xpos, int ypos, int FutureOffset) {
         VecInt Clause = new VecInt();
         int linealIndex = coordToLineal(xpos, ypos, FutureOffset);
         Clause.insertFirst(reading);

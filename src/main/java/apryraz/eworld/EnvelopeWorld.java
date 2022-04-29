@@ -1,10 +1,6 @@
 package apryraz.eworld;
 
-
-import java.io.IOException;
-
 import org.sat4j.specs.*;
-import org.sat4j.minisat.*;
 import org.sat4j.reader.*;
 
 
@@ -12,7 +8,6 @@ import org.sat4j.reader.*;
  * The class for the main program of the Barcenas World
  **/
 public class EnvelopeWorld {
-
 
     /**
      * This function should execute the sequence of steps stored in the file fileSteps,
@@ -23,10 +18,10 @@ public class EnvelopeWorld {
      * @param numSteps      num of steps to perform
      * @param fileSteps     file name with sequence of steps to perform
      * @param fileEnvelopes file name with sequence of steps to perform
+     * @throws ContradictionException if there is a contradiction in the formula
      **/
-    public static void runStepsSequence(int wDim,
-                                        int numSteps, String fileSteps, String fileEnvelopes) throws
-            IOException, ContradictionException, TimeoutException {
+    public static void runStepsSequence(int wDim, int numSteps, String fileSteps, String fileEnvelopes)
+            throws ContradictionException {
         // Make instances of TreasureFinder agent and environment object classes
         EnvelopeFinder EAgent;
         EnvelopeWorldEnv EnvAgent;
@@ -45,14 +40,22 @@ public class EnvelopeWorld {
     }
 
     /**
-     * This function should load five arguments from the command line:
-     * arg[0] = dimension of the word
-     * arg[3] = num of steps to perform
-     * arg[4] = file name with sequence of steps to perform
-     * arg[5] = file name with list of envelopes positions
+     * This function should load five arguments from the command line,
+     * it accepts the following arguments, that can be passed as 4 separate arguments or as a single string
+     * Usage with 4 separate arguments:
+     * java EnvelopeWorld dimension numSteps fileSteps fileEnvelopes
+     * Usage with a single string:
+     * mvn exec:java -Dexec.args="dimension numSteps fileSteps fileEnvelopes"
+     *
+     * @param args the command line arguments
+     *             arg[0] = dimension of the word
+     *             arg[1] = num of steps to perform
+     *             arg[2] = file name with sequence of steps to perform
+     *             arg[3] = file name with list of envelopes positions
+     * @throws ParseFormatException   if the arguments are not in the correct format according to the usage description
+     * @throws ContradictionException if there is a contradiction in the formula
      **/
-    public static void main(String[] args) throws ParseFormatException,
-            IOException, ContradictionException, TimeoutException {
+    public static void main(String[] args) throws ParseFormatException, ContradictionException {
 
         // Here I run a concrete example, but you should read parameters from
         // the command line, as described above.
