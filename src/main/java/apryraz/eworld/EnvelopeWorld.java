@@ -58,26 +58,35 @@ public class EnvelopeWorld {
         // the command line, as described above.
         // runStepsSequence(  4, 5, "tests/steps1.txt", "tests/envelopes1.txt"  );
 
-        if (args.length != 6) {
+        // If a string is given as an input, separate it into the 4 arguments
+        // and call runStepsSequence()
+
+        System.out.println("args.length = " + args.length);
+
+        if (args.length == 1) {
+            // If mvn exec is used, the input is a string
+            System.out.println("Input string: " + args[0]);
+            String[] arg = args[0].split(" ");
+            runStepsSequence(Integer.parseInt(arg[0]), Integer.parseInt(arg[1]), arg[2], arg[3]);
+        } else if (args.length != 4) {
             System.out.println("Usage: java EnvelopeWorld <dimension> <numSteps> <fileSteps> <fileEnvelopes>");
             throw new ParseFormatException("Wrong number of arguments, check Usage");
+        } else {
+
+            // load 4 arguments from the command line
+            int wDim = Integer.parseInt(args[0]);
+            int numSteps = Integer.parseInt(args[1]);
+            String fileSteps = args[2];
+            String fileEnvelopes = args[3];
+
+            System.out.println("wDim = " + wDim);
+            System.out.println("numSteps = " + numSteps);
+            System.out.println("fileSteps = " + fileSteps);
+            System.out.println("fileEnvelopes = " + fileEnvelopes);
+
+            // run the sequence of steps
+            runStepsSequence(wDim, numSteps, fileSteps, fileEnvelopes);
         }
-
-        // load 4 arguments from the command line
-        // NOTE: I don't know what the arguments 1 and 2 are for, so I used only 4 arguments
-        int wDim = Integer.parseInt(args[0]);
-        int numSteps = Integer.parseInt(args[3]);
-        String fileSteps = args[4];
-        String fileEnvelopes = args[5];
-
-        System.out.println("wDim = " + wDim);
-        System.out.println("numSteps = " + numSteps);
-        System.out.println("fileSteps = " + fileSteps);
-        System.out.println("fileEnvelopes = " + fileEnvelopes);
-
-        // run the sequence of steps
-        runStepsSequence(wDim, numSteps, fileSteps, fileEnvelopes);
-
     }
 
 }

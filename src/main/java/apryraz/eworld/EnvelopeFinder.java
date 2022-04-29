@@ -186,7 +186,7 @@ public class EnvelopeFinder {
 
         // Perform logical consequence questions for all the positions
         // of the Envelope World
-        performInferenceQuestions();
+        // performInferenceQuestions(); // TODO - uncomment this line
         efstate.printState();      // Print the resulting knowledge matrix
     }
 
@@ -294,9 +294,12 @@ public class EnvelopeFinder {
 
         // CALL your functions HERE
         if (detects.equals("detectedat")) {
-            addEvidence(x, y, value);
+            //addEvidence(x, y, value);
+            addEvidence2(x, y, value);
+
         } else if (detects.equals("notdetectedat")) {
-            addEvidence(x, y, value);
+            //addEvidence(x, y, value);
+            addEvidence2(x, y, value);
         }
     }
 
@@ -310,7 +313,7 @@ public class EnvelopeFinder {
      */
     public void addEvidence(int x, int y, int value) throws ContradictionException {
         VecInt evidence = new VecInt();
-        if (value == 1) { // TODO FIX I'd want to insert the clauses with OR instead of AND
+        if (value == 1) {
             evidence.insertFirst(coordToLineal(x + 1, y, 0));
             evidence.insertFirst(coordToLineal(x - 1, y, 0));
             evidence.insertFirst(coordToLineal(x, y - 1, 0));
@@ -322,7 +325,7 @@ public class EnvelopeFinder {
             evidence.insertFirst(coordToLineal(x + 1, y + 1, 0));
         } else if (value == 3) {
             evidence.insertFirst(coordToLineal(x, y, 0));
-        } else if (value == 0) {
+        }/* else if (value == 0) {
             // Everything but the 3x3 square around (x,y)
             for (int i = 0; i < WorldDim; i++) {
                 for (int j = 0; j < WorldDim; j++) {
@@ -331,10 +334,88 @@ public class EnvelopeFinder {
                     }
                 }
             }
-        }
+        }*/
         solver.addClause(evidence);
     }
 
+    public void addEvidence2(int x, int y, int value) throws ContradictionException {
+        if (value == 1) {
+            System.out.println("value == 1");
+            //efstate.set(x + 1, y, "X");
+            //efstate.set(x - 1, y, "X");
+            //efstate.set(x, y - 1, "X");
+            //efstate.set(x, y + 1, "X");
+
+            // value == 2
+            efstate.set(x - 1, y - 1, "X");
+            efstate.set(x + 1, y - 1, "X");
+            efstate.set(x - 1, y + 1, "X");
+            efstate.set(x + 1, y + 1, "X");
+
+            // value == 3
+            efstate.set(x, y, "X");
+
+        } else if (value == 2) {
+            System.out.println("value == 2");
+            // value == 1
+            efstate.set(x + 1, y, "X");
+            efstate.set(x - 1, y, "X");
+            efstate.set(x, y - 1, "X");
+            efstate.set(x, y + 1, "X");
+
+            // value == 3
+            efstate.set(x, y, "X");
+
+            //efstate.set(x - 1, y - 1, "X");
+            //efstate.set(x + 1, y - 1, "X");
+            //efstate.set(x - 1, y + 1, "X");
+            //efstate.set(x + 1, y + 1, "X");
+
+        } else if (value == 3) {
+            System.out.println("value == 3");
+            //efstate.set(x, y, "X");
+
+            // value == 1
+            efstate.set(x + 1, y, "X");
+            efstate.set(x - 1, y, "X");
+            efstate.set(x, y - 1, "X");
+            efstate.set(x, y + 1, "X");
+
+            // value == 2
+            efstate.set(x - 1, y - 1, "X");
+            efstate.set(x + 1, y - 1, "X");
+            efstate.set(x - 1, y + 1, "X");
+            efstate.set(x + 1, y + 1, "X");
+
+        } else if (value == 0) {
+            System.out.println("value == 0");
+            // value == 1
+            efstate.set(x + 1, y, "X");
+            efstate.set(x - 1, y, "X");
+            efstate.set(x, y - 1, "X");
+            efstate.set(x, y + 1, "X");
+
+            // value == 2
+            efstate.set(x - 1, y - 1, "X");
+            efstate.set(x + 1, y - 1, "X");
+            efstate.set(x - 1, y + 1, "X");
+            efstate.set(x + 1, y + 1, "X");
+
+            // value == 3
+            efstate.set(x, y, "X");
+        }
+        /* else if (value == 0) {
+            // Everything but the 3x3 square around (x,y)
+            for (int i = 0; i < WorldDim; i++) {
+                for (int j = 0; j < WorldDim; j++) {
+                    if (i != x && j != y && i != x - 1 && i != x + 1 && j != y - 1 && j != y + 1) {
+                        evidence.insertFirst(coordToLineal(i, j, 0));
+                    }
+                }
+            }
+        }*/
+
+    }
 
     /**
      * This function should add all the clauses stored in the list
@@ -370,7 +451,7 @@ public class EnvelopeFinder {
             ContradictionException, TimeoutException {
         // EXAMPLE code to check this for position (2,3):
         /*
-       // Get variable number for position 2,3 in past variables
+       // Get variable number for position 2,3 in past variables'
         int linealIndex = coordToLineal(2, 3, EnvelopeFutureOffset);
        // Get the same variable, but in the past subset
         int linealIndexPast = coordToLineal(2, 3, EnvelopePastOffset);
@@ -407,6 +488,7 @@ public class EnvelopeFinder {
 
                 // Check if Gamma + variablePositive is unsatisfiable:
                 if (!(solver.isSatisfiable(variablePositive))) { // TODO NOTE: I haven't been able to pass this condition
+                    //if (!(isSatisifiable2(variablePositive))) {
                     // Add conclusion to list, but rewritten with respect to "past" variables
                     VecInt concPast = new VecInt();
                     concPast.insertFirst(-(linealIndexPast));
@@ -419,6 +501,24 @@ public class EnvelopeFinder {
             }
         }
 
+    }
+
+    public boolean isSatisifiable2(VecInt variablePositive) {
+
+        // Print variablePositive
+        if (variablePositive.size() > 0) {
+            System.out.println(" #debug# FINDER => isSatisifiable2: " + variablePositive.toString());
+        }
+
+        return true;
+
+
+    }
+
+    public void printVecInt(VecInt vec) {
+        for (int i = 0; i < vec.size(); i++) {
+            System.out.println(" #debug# FINDER => " + vec.get(i));
+        }
     }
 
     /**
@@ -439,7 +539,7 @@ public class EnvelopeFinder {
         solver.setTimeout(3600);
         solver.newVar(totalNumVariables);
         // This variable is used to generate, in a particular sequential order,
-        // the variable indentifiers of all the variables
+        // the variable identifiers of all the variables
         actualLiteral = 1;
 
         // call here functions to add the different sets of clauses
@@ -548,7 +648,7 @@ public class EnvelopeFinder {
      * @param y      y coordinate of the position variable to encode
      * @param offset initial value for the subset of position variables
      *               (past or future subset)
-     * @return the integer indentifer of the variable  b_[x,y] in the formula
+     * @return the integer identifier of the variable  b_[x,y] in the formula
      **/
     public int coordToLineal(int x, int y, int offset) {
         return ((x - 1) * WorldDim) + (y - 1) + offset;

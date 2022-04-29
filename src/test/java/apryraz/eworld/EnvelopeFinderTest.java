@@ -1,5 +1,3 @@
-package apryraz.eworld;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -20,6 +18,7 @@ import org.sat4j.reader.*;
 import apryraz.eworld.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.*;
 
@@ -37,9 +36,22 @@ public class EnvelopeFinderTest {
      * @param targetState the state that should be equal to the resulting state of
      *                    the agent after performing the next step
      **/
-    public void testMakeSimpleStep(EnvelopeFinder eAgent, EFState targetState) throws IOException, ContradictionException, TimeoutException {
+    public void testMakeSimpleStep(EnvelopeFinder eAgent,
+                                   EFState targetState) throws
+            IOException, ContradictionException, TimeoutException {
         // Check (assert) whether the resulting state is equal to
         //  the targetState after performing action runNextStep with bAgent
+
+        eAgent.runNextStep();
+        EFState currentState = eAgent.getState();
+
+        System.out.println("EXPECTED: targetState:");
+        targetState.printState();
+
+        System.out.println("ACTUAL: eAgent.getState():");
+        currentState.printState();
+
+        assertEquals(targetState, currentState);
 
     }
 
@@ -51,7 +63,8 @@ public class EnvelopeFinderTest {
      * @param br   BufferedReader object interface to the opened file of states
      * @param wDim dimension of the world
      **/
-    public EFState readTargetStateFromFile(BufferedReader br, int wDim) throws IOException {
+    public EFState readTargetStateFromFile(BufferedReader br, int wDim) throws
+            IOException {
         EFState efstate = new EFState(wDim);
         String row;
         String[] rowvalues;
@@ -69,7 +82,7 @@ public class EnvelopeFinderTest {
     /**
      * Load a sequence of states from a file, and return the list
      *
-     * @param WDim       dimension of the world
+     * @param wDim       dimension of the world
      * @param numStates  num of states to read from the file
      * @param statesFile file name with sequence of target states, that should
      *                   be the resulting states after each movement in fileSteps
@@ -81,6 +94,7 @@ public class EnvelopeFinderTest {
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(statesFile));
+            System.out.println("Reading states from file: " + statesFile);
             String row;
 
             // steps = br.readLine();
@@ -113,7 +127,10 @@ public class EnvelopeFinderTest {
      *                      be the resulting states after each movement in fileSteps
      * @param fileEnvelopes file name with sequence of envelopes
      **/
-    public void testMakeSeqOfSteps(int wDim, int numSteps, String fileSteps, String fileStates, String fileEnvelopes) throws IOException, ContradictionException, TimeoutException {
+    public void testMakeSeqOfSteps(int wDim,
+                                   int numSteps, String fileSteps, String fileStates,
+                                   String fileEnvelopes)
+            throws IOException, ContradictionException, TimeoutException {
         // You should make TreasureFinder and TreasureWorldEnv objects to  test.
         // Then load sequence of target states, load sequence of steps into the eAgent
         // and then test the sequence calling testMakeSimpleStep once for each step.
@@ -121,7 +138,7 @@ public class EnvelopeFinderTest {
         // load information about the World into the EnvAgent
         EnvelopeWorldEnv envAgent = new EnvelopeWorldEnv(wDim, fileEnvelopes);
         // Load list of states
-        ArrayList<EFState> seqOfStates;
+        ArrayList<EFState> seqOfStates = loadListOfTargetStates(wDim, numSteps, fileStates);
 
 
         // Set environment agent and load list of steps into the finder agent
@@ -130,6 +147,10 @@ public class EnvelopeFinderTest {
 
         // Test here the sequence of steps and check the resulting states with the
         // ones in seqOfStates
+
+        for (int i = 0; i < numSteps; i++) {
+            testMakeSimpleStep(eAgent, seqOfStates.get(i));
+        }
     }
 
     /**
@@ -137,8 +158,49 @@ public class EnvelopeFinderTest {
      * test sequence, or use some kind of parametric tests with junit
      **/
     @Test
-    public void TWorldTest1() throws IOException, ContradictionException, TimeoutException {
-        // Example test for 4x4 world , Treasure at 3,3 and 5 steps
-        testMakeSeqOfSteps(4, 5, "tests/steps1.txt", "tests/states1.txt", "tests/envelopes1.txt");
+    public void TWorldTest0() throws
+            IOException, ContradictionException, TimeoutException {
+        // Test for 5x5 world , Treasure at 3,3 and 5 steps
+        testMakeSeqOfSteps(5, 5, "tests/steps1.txt", "tests/states1.txt", "tests/envelopes1.txt");
+    }
+
+    /**
+     * This is the first test.
+     * test1 (states1.txt steps1.txt envelopes1.txt):  5x5 world,  5 steps ,  envelopes at  2,2 4,4
+     **/
+    @Test
+    public void TWorldTest1() throws
+            IOException, ContradictionException, TimeoutException {
+        testMakeSeqOfSteps(5, 5, "tests/steps1.txt", "tests/states1.txt", "tests/envelopes1.txt");
+    }
+
+    /**
+     * This is the second test.
+     * test2 (states2.txt steps2.txt envelopes2.txt): 5x5 world,  7 steps , envelopes at  3,2 3,4
+     **/
+    @Test
+    public void TWorldTest2() throws
+            IOException, ContradictionException, TimeoutException {
+        testMakeSeqOfSteps(5, 7, "tests/steps2.txt", "tests/states2.txt", "tests/envelopes2.txt");
+    }
+
+    /**
+     * This is the third test.
+     * test3 (states3.txt steps3.txt envelopes3.txt): 7x7 world,  6 steps,  envelopes at  3,2 4,4 2,6
+     **/
+    @Test
+    public void TWorldTest3() throws
+            IOException, ContradictionException, TimeoutException {
+        testMakeSeqOfSteps(7, 6, "tests/steps3.txt", "tests/states3.txt", "tests/envelopes3.txt");
+    }
+
+    /**
+     * This is the fourth test.
+     * test4 (states4.txt steps4.txt envelopes4.txt): 7x7 world,  12 steps , envelopes at  6,2 4,4 2,6
+     **/
+    @Test
+    public void TWorldTest4() throws
+            IOException, ContradictionException, TimeoutException {
+        testMakeSeqOfSteps(7, 12, "tests/steps4.txt", "tests/states4.txt", "tests/envelopes4.txt");
     }
 }
