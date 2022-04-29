@@ -158,7 +158,7 @@ public class EnvelopeFinderTest {
     @Test
     public void TWorldTest0() throws ContradictionException {
         // Test for 5x5 world , Treasure at 3,3 and 5 steps
-        testMakeSeqOfSteps(5, 5, "tests/steps1.txt", "tests/states1.txt", "tests/envelopes1.txt");
+        testMakeSeqOfSteps(5, 3, "tests/steps1.txt", "tests/states1.txt", "tests/envelopes1.txt");
     }
 
     /**
